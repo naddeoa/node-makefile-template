@@ -12,7 +12,9 @@ thing you should do is run `./setup.sh`.
     Only tested with python2.7
 
  * npm
+
  * watchmedo
+
     Can be installed with `pip install watchmedo`
 
 
