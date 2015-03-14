@@ -12,6 +12,7 @@ SERVER_PORT         = 8888
 TEST                = ./node_modules/.bin/mocha
 MINIFY              = ./node_modules/.bin/minify
 CONCAT              = ./node_modules/.bin/browserify --standalone $(REQUIRE)
+JSX                 = ./node_modules/.bin/jsx
 
 
 # The index.js file that declares the public API of the library
@@ -32,6 +33,10 @@ FILE_MIN_BROWSER    = bundle.min.js
 
 SRC_DIR             = ./node_modules/app
 SRC                 = $(SRC_DIR)/*.js
+SRC_JSX             = $(shell find ./node_modules/app/ -name '*.jsx')
+
+# artifacts from jsx transpiling
+JSX_BUILD          = $(patsubst %.jsx, %.js, $(SRC_JSX))
 
 # The external programs that this makefile relies on
 DEPENDENCIES        = watchmedo npm python
@@ -47,13 +52,13 @@ endif
 
 
 # Build the source module
-all: $(FILE_MIN)
+all: jsx $(FILE_MIN)
 
 # Build the source module for the browser
-browser: $(FILE_MIN_BROWSER)
+browser: jsx $(FILE_MIN_BROWSER)
 
 # Compile javascript into a single file for browser inclusion
-$(FILE): ./node_modules/app/*.js $(INDEXJS)
+$(FILE): ./node_modules/app/*.js ./node_modules/app/*.jsx $(INDEXJS)
 	$(CONCAT) -r $(INDEXJS):$(REQUIRE) > $(FILE)
 
 # Minify the concatonated source module
@@ -75,7 +80,10 @@ test:
 	$(TEST)
 
 clean:
-	-rm $(FILE) $(FILE_MIN) $(FILE_BROWSER) $(FILE_MIN_BROWSER)
+	-rm $(FILE) $(FILE_MIN) $(FILE_BROWSER) $(FILE_MIN_BROWSER) $(JSX_BUILD)
+
+jsx:
+	$(foreach jsx, $(shell find ./node_modules/app -name '*.jsx'), $(JSX) $(jsx) > $(patsubst %.jsx, %.js, $(jsx));)
 
 # Publish to npm
 publish: all
@@ -91,5 +99,5 @@ server:
 watch: 
 	watchmedo shell-command --recursive --command=$(PWD)/Makefile $(SRC_DIR)
 
-.PHONY: test watch dependencies
+.PHONY: test watch dependencies jsx
 
